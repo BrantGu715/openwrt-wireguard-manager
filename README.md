@@ -42,28 +42,29 @@ TP-LINK（硬路由，主路由）
  │
  └── NAS（备份目标）
      IP：192.168.0.103
-逻辑拓扑（VPN 建立后）
-text
-Copy code
-客户端（远程，10.7.0.2）
-        ←── WireGuard 隧道 ──→
-OpenWRT (wg0: 10.7.0.1)
- │
- ├── 硬路由 (192.168.0.1)
- ├── 电脑 (192.168.0.102)
- └── NAS  (192.168.0.103)
-OpenWrt 核心配置
+```
+	 
+### 逻辑拓扑（VPN 建立后）
+
+```text
+客户端（远程，10.7.0.2） ←── WireGuard隧道 ──→ OpenWRT (wg0:10.7.0.1)
+                                      │
+                                      ├── 硬路由 (192.168.0.1)
+                                      │
+                                      ├── 电脑 (192.168.0.102)
+                                      │
+                                      └── NAS (192.168.0.103)
+```									  
+									  
+### OpenWrt 核心配置
 主要任务是配置两个文件：
 
 /etc/config/firewall
-
 /etc/config/network
 
-/etc/config/firewall
-配置端口转发状态：
-
-conf
-Copy code
+#### 配置端口转发状态：
+```sh
+/etc/config/firewall	
 config zone
     option name 'wg'
     list network 'wg0'
@@ -85,20 +86,18 @@ config rule
     option proto 'udp'
     option dest_port '12345'
     option target 'ACCEPT'
-/etc/config/network
-配置 wg0 接口、私钥和监听端口：
+```
 
-conf
-Copy code
+#### 配置 wg0 接口、私钥和监听端口：	
+```sh
+/etc/config/network		
 config interface 'wg0'
     option proto 'wireguard'
     option private_key 'SSS'
     list addresses '10.7.0.1/24'
     option listen_port '12345'
-客户端（Peer）配置：
-
-conf
-Copy code
+	
+# 客户端（Peer）配置：
 config wireguard_wg0
     option public_key 'BBB'
     list allowed_ips '10.7.0.2/32'
@@ -106,12 +105,13 @@ config wireguard_wg0
 config wireguard_wg0
     option public_key 'CCC'
     list allowed_ips '10.7.0.3/32'
+```	
+
 每一个 config wireguard_wg0 即一个客户端（Peer）
 添加 client 只能通过修改 network 文件完成
 
-脚本目录结构
-text
-Copy code
+### 脚本目录结构
+```test
 /usr/local/bin/
 ├── wgm                     # 总入口（推荐使用）
 │
@@ -136,59 +136,47 @@ Copy code
 ├── wg-system-doctor        # 故障诊断
 ├── wg-system-audit         # 安全审计
 ├── wg-system-guide         # 使用指南
+```
+
 推荐用法（统一入口）
-bash
-Copy code
 wgm [subcommand] [args]
 wgm 是唯一推荐入口
 
 所有功能均可通过 wgm 访问
-
 wg-* 脚本仅用于调试或内部调用
 
 wgm 命令总览
 服务管理
-bash
-Copy code
 wgm service status
 wgm service start
 wgm service stop
 wgm service restart
+
 适用场景：
-
 服务启动失败排查
-
 修改配置后的重载
-
 确认 WireGuard 运行状态
 
 客户端管理
-bash
-Copy code
 wgm client add <name>
 wgm client remove <name>
 wgm client enable <name>
 wgm client disable <name>
 wgm client status
 wgm client qrcode <name>
+
 说明：
-
 disable 不删除密钥，仅阻断访问
-
 enable 用于恢复客户端
-
 适合临时封禁、账号冻结场景
 
 端口管理
-bash
-Copy code
 wgm port change
 wgm port check
+
 修改端口后通常需要重启服务。
 
 系统维护
-bash
-Copy code
 wgm system install
 wgm system setup
 wgm system backup
@@ -196,18 +184,15 @@ wgm system monitor
 wgm system doctor
 wgm system audit
 wgm system guide
+
 设计原则
 所有脚本只做一件事
-
 不隐藏配置文件位置
-
 所有修改可审计、可回滚
 
 适用环境
 OpenWrt（实体路由 / x86 软路由）
-
 BusyBox / ash
-
 WireGuard 官方内核模块或 wireguard-tools
 
 免责声明
