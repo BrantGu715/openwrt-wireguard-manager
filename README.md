@@ -142,7 +142,7 @@ config wireguard_wg0
 ```
 
 
-推荐用法（统一入口）
+### 推荐用法（统一入口）
 
 wgm [subcommand] [args]
 
@@ -152,9 +152,9 @@ wgm 是唯一推荐入口
 
 wg-* 脚本仅用于调试或内部调用
 
-wgm 命令总览
+## wgm 命令总览
 
-服务管理
+### 服务管理
 ```sh
 wgm service status
 wgm service start
@@ -170,7 +170,7 @@ wgm service restart
 
 确认 WireGuard 运行状态
 
-客户端管理
+### 客户端管理
 ```sh
 wgm client add <name>
 wgm client remove <name>
@@ -185,7 +185,7 @@ disable 不删除密钥，仅阻断访问
 enable 用于恢复客户端
 适合临时封禁、账号冻结场景
 
-端口管理
+### 端口管理
 ```sh
 wgm port change
 wgm port check
@@ -193,7 +193,7 @@ wgm port check
 
 修改端口后通常需要重启服务。
 
-系统维护
+### 系统维护
 ```sh
 wgm system install
 wgm system setup
@@ -204,7 +204,7 @@ wgm system audit
 wgm system guide
 ```
 
-设计原则
+## 设计原则
 
 所有脚本只做一件事
 
@@ -212,7 +212,7 @@ wgm system guide
 
 所有修改可审计、可回滚
 
-适用环境
+## 适用环境
 
 OpenWrt（实体路由 / x86 软路由）
 
@@ -220,7 +220,7 @@ BusyBox / ash
 
 WireGuard 官方内核模块或 wireguard-tools
 
-免责声明
+## 免责声明
 
 本项目不会修改 OpenWrt 默认安全策略。
 
