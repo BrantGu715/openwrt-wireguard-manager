@@ -1,8 +1,7 @@
 # WireGuard System（OpenWrt）
 
 记录在 OpenWRT 上部署 WireGuard VPN。  
-同时新建一些基于 OpenWrt 的 WireGuard 命令行管理脚本，用于在路由器 / 软路由环境中  
-**快速、安全地管理 WireGuard 服务、客户端和端口配置。**
+同时新建一些基于 OpenWrt 的 WireGuard 命令行管理脚本，用于在路由器 / 软路由环境中快速、安全地管理 WireGuard 服务、客户端和端口配置。
 
 ---
 
@@ -58,9 +57,10 @@ TP-LINK（硬路由，主路由）
 									  
 ### OpenWrt 核心配置
 主要任务是配置两个文件：
-
+```sh
 /etc/config/firewall
 /etc/config/network
+```
 
 #### 配置端口转发状态：
 ```sh
@@ -107,8 +107,10 @@ config wireguard_wg0
     list allowed_ips '10.7.0.3/32'
 ```	
 
+```test
 每一个 config wireguard_wg0 即一个客户端（Peer）
 添加 client 只能通过修改 network 文件完成
+```
 
 ### 脚本目录结构
 ```test
@@ -138,6 +140,7 @@ config wireguard_wg0
 ├── wg-system-guide         # 使用指南
 ```
 
+```test
 推荐用法（统一入口）
 wgm [subcommand] [args]
 wgm 是唯一推荐入口
@@ -198,3 +201,4 @@ WireGuard 官方内核模块或 wireguard-tools
 免责声明
 本项目不会修改 OpenWrt 默认安全策略。
 所有端口开放与访问控制策略需使用者自行评估风险。
+```
