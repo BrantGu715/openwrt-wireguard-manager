@@ -1,7 +1,7 @@
 # WireGuard System（OpenWrt）
 
 记录在 OpenWRT 上部署 WireGuard VPN。  
-同时新建一些基于 OpenWrt 的 WireGuard 命令行管理脚本，用于在路由器 / 软路由环境中快速、安全地管理 WireGuard 服务、客户端和端口配置。
+同时新建一些基于 OpenWrt 的 WireGuard 命令行管理脚本，用于在路由器 / 软路由环境中**快速、安全地管理 WireGuard 服务、客户端和端口配置。**
 
 ---
 
@@ -9,9 +9,9 @@
 
 - 不替代 `wg` / `wg-quick` 原生命令
 - 不依赖 Web UI（LuCI）
-- 提供一套 **稳定、可组合、脚本友好的运维工具**
+- 提供一套**稳定、可组合、脚本友好的运维工具**
 
-所有操作 **推荐通过 `wgm` 统一入口执行**，  
+所有操作**推荐通过 `wgm` 统一入口执行**，  
 底层 `wg-*` 脚本作为实现细节存在。
 
 ---
@@ -107,10 +107,10 @@ config wireguard_wg0
     list allowed_ips '10.7.0.3/32'
 ```	
 
-```test
-每一个 config wireguard_wg0 即一个客户端（Peer）
-添加 client 只能通过修改 network 文件完成
-```
+
+每一个 config wireguard_wg0 即一个客户端（Peer）。
+添加 client 只能通过修改 network 文件完成。
+
 
 ### 脚本目录结构
 ```test
@@ -140,7 +140,7 @@ config wireguard_wg0
 ├── wg-system-guide         # 使用指南
 ```
 
-```test
+
 推荐用法（统一入口）
 wgm [subcommand] [args]
 wgm 是唯一推荐入口
@@ -150,10 +150,12 @@ wg-* 脚本仅用于调试或内部调用
 
 wgm 命令总览
 服务管理
+```sh
 wgm service status
 wgm service start
 wgm service stop
 wgm service restart
+```
 
 适用场景：
 服务启动失败排查
@@ -161,12 +163,14 @@ wgm service restart
 确认 WireGuard 运行状态
 
 客户端管理
+```sh
 wgm client add <name>
 wgm client remove <name>
 wgm client enable <name>
 wgm client disable <name>
 wgm client status
 wgm client qrcode <name>
+```
 
 说明：
 disable 不删除密钥，仅阻断访问
@@ -174,12 +178,15 @@ enable 用于恢复客户端
 适合临时封禁、账号冻结场景
 
 端口管理
+```sh
 wgm port change
 wgm port check
+```
 
 修改端口后通常需要重启服务。
 
 系统维护
+```sh
 wgm system install
 wgm system setup
 wgm system backup
@@ -187,6 +194,7 @@ wgm system monitor
 wgm system doctor
 wgm system audit
 wgm system guide
+```
 
 设计原则
 所有脚本只做一件事
@@ -201,4 +209,3 @@ WireGuard 官方内核模块或 wireguard-tools
 免责声明
 本项目不会修改 OpenWrt 默认安全策略。
 所有端口开放与访问控制策略需使用者自行评估风险。
-```
