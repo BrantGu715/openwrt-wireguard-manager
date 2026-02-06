@@ -56,7 +56,7 @@ TP-LINK（硬路由，主路由）
 ```									  
 									  
 ### OpenWrt 核心配置
-主要任务是配置两个文件：
+主要任务是配置这两个文件：
 ```sh
 /etc/config/firewall
 /etc/config/network
@@ -108,8 +108,9 @@ config wireguard_wg0
 ```	
 
 
-每一个 config wireguard_wg0 即一个客户端（Peer）。
-添加 client 只能通过修改 network 文件完成。
+每一个 config wireguard_wg0 即一个客户端（Peer）
+
+添加 client 只能通过修改 network 文件完成
 
 
 ### 脚本目录结构
@@ -142,13 +143,17 @@ config wireguard_wg0
 
 
 推荐用法（统一入口）
+
 wgm [subcommand] [args]
+
 wgm 是唯一推荐入口
 
 所有功能均可通过 wgm 访问
+
 wg-* 脚本仅用于调试或内部调用
 
 wgm 命令总览
+
 服务管理
 ```sh
 wgm service status
@@ -158,8 +163,11 @@ wgm service restart
 ```
 
 适用场景：
+
 服务启动失败排查
+
 修改配置后的重载
+
 确认 WireGuard 运行状态
 
 客户端管理
@@ -197,15 +205,23 @@ wgm system guide
 ```
 
 设计原则
+
 所有脚本只做一件事
+
 不隐藏配置文件位置
+
 所有修改可审计、可回滚
 
 适用环境
+
 OpenWrt（实体路由 / x86 软路由）
+
 BusyBox / ash
+
 WireGuard 官方内核模块或 wireguard-tools
 
 免责声明
+
 本项目不会修改 OpenWrt 默认安全策略。
+
 所有端口开放与访问控制策略需使用者自行评估风险。
