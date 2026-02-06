@@ -57,13 +57,13 @@ TP-LINK（硬路由，主路由）
 									  
 ### OpenWrt 核心配置
 主要任务是配置这两个文件：
-```sh
-/etc/config/firewall
-/etc/config/network
-```
+
+- /etc/config/firewall
+- /etc/config/network
+
 
 #### 配置端口转发状态：
-```sh
+```conf
 /etc/config/firewall	
 config zone
     option name 'wg'
@@ -89,7 +89,7 @@ config rule
 ```
 
 #### 配置 wg0 接口、私钥和监听端口：	
-```sh
+```conf
 /etc/config/network		
 config interface 'wg0'
     option proto 'wireguard'
@@ -155,7 +155,7 @@ wg-* 脚本仅用于调试或内部调用
 ## wgm 命令总览
 
 ### 服务管理
-```sh
+```bash
 wgm service status
 wgm service start
 wgm service stop
@@ -171,7 +171,7 @@ wgm service restart
 确认 WireGuard 运行状态
 
 ### 客户端管理
-```sh
+```bash
 wgm client add <name>
 wgm client remove <name>
 wgm client enable <name>
@@ -186,7 +186,7 @@ enable 用于恢复客户端
 适合临时封禁、账号冻结场景
 
 ### 端口管理
-```sh
+```bash
 wgm port change
 wgm port check
 ```
@@ -194,7 +194,7 @@ wgm port check
 修改端口后通常需要重启服务。
 
 ### 系统维护
-```sh
+```bash
 wgm system install
 wgm system setup
 wgm system backup
