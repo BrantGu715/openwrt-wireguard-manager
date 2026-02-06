@@ -1,0 +1,79 @@
+#!/bin/sh
+set -e
+
+CLIENT_NAME="$1"
+[ -z "$CLIENT_NAME" ] && echo "用法: wg-client-add <客户端名>" && exit 1
+
+WG_IF="wg0"
+WG_NET="wg0"
+WG_DIR="/etc/wireguard"
+CLIENT_DIR="$WG_DIR/clients"
+MAP_FILE="$CLIENT_DIR/clients.map"
+
+read -p "请输入 Endpoint 域名/IP: " ENDPOINT_HOST
+read -p "请输入 外部端口 (external): " ENDPOINT_PORT
+
+[ -z "$ENDPOINT_HOST" ] && exit 1
+[ -z "$ENDPOINT_PORT" ] && exit 1
+
+mkdir -p "$CLIENT_DIR"
+touch "$MAP_FILE"
+
+# ===== 1. 分配 IP（严格去重） =====
+USED_IPS=$(awk -F'|' '{print $3}' "$MAP_FILE")
+for i in $(seq 10 254); do
+    IP="10.7.0.$i"
+    echo "$USED_IPS" | grep -q "$IP" || break
+done
+
+CLIENT_IP="$IP"
+
+# ===== 2. 生成密钥 =====
+CLIENT_PRIV=$(wg genkey)
+CLIENT_PUB=$(echo "$CLIENT_PRIV" | wg pubkey)
+
+echo "$CLIENT_PRIV" > "$CLIENT_DIR/$CLIENT_NAME.key"
+echo "$CLIENT_PUB"  > "$CLIENT_DIR/$CLIENT_NAME.pub"
+chmod 600 "$CLIENT_DIR/$CLIENT_NAME.key"
+
+# ===== 3. 写入 WireGuard（运行态）=====
+wg set "$WG_IF" peer "$CLIENT_PUB" allowed-ips "$CLIENT_IP/32"
+
+# ===== 4. 写入 network（持久化）=====
+uci add network wireguard_wg0 >/dev/null
+uci set network.@wireguard_wg0[-1].public_key="$CLIENT_PUB"
+uci add_list network.@wireguard_wg0[-1].allowed_ips="$CLIENT_IP/32"
+uci commit network
+
+/etc/init.d/network reload >/dev/null
+
+# ===== 5. 写入 clients.map =====
+echo "$CLIENT_PUB|$CLIENT_NAME|$CLIENT_IP" >> "$MAP_FILE"
+
+# ===== 6. 生成客户端配置 =====
+SERVER_PUB=$(cat "$WG_DIR/server.pub")
+
+cat > "$CLIENT_DIR/$CLIENT_NAME.conf" <<EOF
+[Interface]
+PrivateKey = $CLIENT_PRIV
+Address = $CLIENT_IP/24
+DNS = 192.168.0.1
+MTU = 1420
+
+[Peer]
+PublicKey = $SERVER_PUB
+Endpoint = $ENDPOINT_HOST:$ENDPOINT_PORT
+AllowedIPs = 10.7.0.0/24, 192.168.0.0/24
+PersistentKeepalive = 25
+EOF
+
+# ===== 7. 二维码 =====
+if command -v qrencode >/dev/null; then
+    qrencode -t UTF8 < "$CLIENT_DIR/$CLIENT_NAME.conf"
+fi
+
+echo ""
+echo "✅ 客户端已添加:"
+echo "  名称: $CLIENT_NAME"
+echo "  IP:   $CLIENT_IP"
+echo "  文件: $CLIENT_DIR/$CLIENT_NAME.conf"

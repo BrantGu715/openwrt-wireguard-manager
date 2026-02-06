@@ -1,0 +1,53 @@
+#!/bin/sh
+
+WG_IF="wg0"
+MAP="/etc/wireguard/clients/clients.map"
+
+echo "WireGuard 配置一致性审计 (wg-system-audit)"
+echo "================================================="
+
+[ ! -f "$MAP" ] && echo "❌ clients.map 不存在" && exit 1
+
+# 1. wg 中存在但 map 不存在
+echo "[1] 未注册 Peer（wg 有，map 无）"
+FOUND=0
+for pub in $(wg show "$WG_IF" peers 2>/dev/null); do
+    if ! grep -q "^$pub|" "$MAP"; then
+        echo "  ⚠️ $pub"
+        FOUND=1
+    fi
+done
+[ "$FOUND" -eq 0 ] && echo "  ✅ 无"
+
+echo "-------------------------------------------------"
+
+# 2. map 中存在但 wg 不存在
+echo "[2] 残留 Peer（map 有，wg 无）"
+FOUND=0
+while IFS='|' read pub name ip; do
+    if ! wg show "$WG_IF" peers 2>/dev/null | grep -q "$pub"; then
+        echo "  ⚠️ $name ($ip)"
+        FOUND=1
+    fi
+done < "$MAP"
+[ "$FOUND" -eq 0 ] && echo "  ✅ 无"
+
+echo "-------------------------------------------------"
+
+# 3. IP 冲突
+echo "[3] IP 冲突检查"
+DUP_IP=$(awk -F'|' '{print $3}' "$MAP" | sort | uniq -d)
+[ -n "$DUP_IP" ] && echo "$DUP_IP" | sed 's/^/  ⚠️ /' || echo "  ✅ 无"
+
+echo "-------------------------------------------------"
+
+# 4. 客户端名称冲突
+echo "[4] 客户端名称冲突"
+DUP_NAME=$(awk -F'|' '{print $2}' "$MAP" | sort | uniq -d)
+[ -n "$DUP_NAME" ] && echo "$DUP_NAME" | sed 's/^/  ⚠️ /' || echo "  ✅ 无"
+
+echo "================================================="
+echo "说明:"
+echo "• 未注册 Peer → 多为历史残留或误操作"
+echo "• 残留 Peer   → wg-client-remove 曾异常中断"
+

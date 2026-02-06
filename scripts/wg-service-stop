@@ -1,0 +1,10 @@
+#!/bin/sh
+echo "停止 WireGuard (OpenWrt)..."
+
+# 停止 network 中的 wg0
+ifdown wg0 2>/dev/null
+
+# 重载防火墙
+/etc/init.d/firewall restart
+
+echo "✅ WireGuard 已停止"

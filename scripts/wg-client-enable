@@ -1,0 +1,20 @@
+
+#!/bin/sh
+# WireGuard 启用客户端
+# 仅恢复到运行态，不修改 clients.map
+
+CLIENT="$1"
+[ -z "$CLIENT" ] && echo "用法: wg-client-enable <客户端名>" && exit 1
+
+MAP="/etc/wireguard/clients/clients.map"
+WG_IF="wg0"
+
+PUB=$(awk -F'|' -v n="$CLIENT" '$2==n{print $1}' "$MAP")
+IP=$(awk -F'|' -v n="$CLIENT" '$2==n{print $3}' "$MAP")
+
+[ -z "$PUB" ] && echo "❌ 未找到客户端" && exit 1
+[ -z "$IP" ] && echo "❌ 未找到客户端IP" && exit 1
+
+wg set "$WG_IF" peer "$PUB" allowed-ips "$IP/32"
+
+echo "✅ 客户端 $CLIENT 已启用 (WireGuard peer 已添加)"

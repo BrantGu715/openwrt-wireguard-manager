@@ -1,0 +1,90 @@
+#!/bin/sh
+
+BASE="/usr/local/bin"
+
+usage() {
+cat <<'EOF'
+用法: wgm <command>
+
+服务管理:
+  wgm service status
+  wgm service start
+  wgm service stop
+  wgm service restart
+
+客户端管理:
+  wgm client add
+  wgm client remove <name>
+  wgm client disable <name>
+  wgm client enable <name>
+  wgm client qrcode <name>
+
+端口管理:
+  wgm port change
+  wgm port check
+
+系统维护:
+  wgm system backup
+  wgm system guide
+  wgm system monitor
+  wgm system install
+  wgm system setup
+  wgm system doctor
+  wgm system audit
+EOF
+}
+
+[ $# -lt 1 ] && usage && exit 1
+
+case "$1" in
+# ================= 服务 =================
+service)
+    case "$2" in
+        status)   exec "$BASE/wg-service-status" ;;
+        start)    exec "$BASE/wg-service-start" ;;
+        stop)     exec "$BASE/wg-service-stop" ;;
+        restart)  exec "$BASE/wg-service-restart" ;;
+        *) usage ;;
+    esac
+;;
+
+# ================= 客户端 =================
+client)
+    case "$2" in
+        add)      exec "$BASE/wg-client-add" ;;
+        remove)   exec "$BASE/wg-client-remove" "$3" ;;
+        disable)  exec "$BASE/wg-client-disable" "$3" ;;
+        enable)   exec "$BASE/wg-client-enable" "$3" ;;
+        qrcode)   exec "$BASE/wg-client-qrcode" "$3" ;;
+        *) usage ;;
+    esac
+;;
+
+# ================= 端口 =================
+port)
+    case "$2" in
+        change) exec "$BASE/wg-port-change" ;;
+        check)  exec "$BASE/wg-port-check" ;;
+        *) usage ;;
+    esac
+;;
+
+# ================= 系统 =================
+system)
+    case "$2" in
+        backup)   exec "$BASE/wg-system-backup" ;;
+        guide)    exec "$BASE/wg-system-guide" ;;
+        monitor)  exec "$BASE/wg-system-monitor" ;;
+        install)  exec "$BASE/wg-system-install" ;;
+        setup)    exec "$BASE/wg-system-setup" ;;
+	doctor)  exec "$BASE/wg-system-doctor" ;;
+        audit)    exec "$BASE/wg-system-audit" ;;
+        *) usage ;;
+    esac
+;;
+
+*)
+    usage
+;;
+esac
+

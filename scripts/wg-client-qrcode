@@ -1,0 +1,41 @@
+#!/bin/sh
+
+CLIENT="$1"
+CLIENT_DIR="/etc/wireguard/clients"
+CONF="$CLIENT_DIR/$CLIENT.conf"
+PNG="$CLIENT_DIR/$CLIENT.png"
+
+[ -z "$CLIENT" ] && {
+    echo "用法: wg-client-qrcode <客户端名>"
+    exit 1
+}
+
+[ ! -f "$CONF" ] && {
+    echo "❌ 未找到配置文件: $CONF"
+    exit 1
+}
+
+# 检查 qrencode
+if ! command -v qrencode >/dev/null 2>&1; then
+    echo "❌ 未安装 qrencode"
+    echo "请执行: opkg install qrencode"
+    exit 1
+fi
+
+echo "客户端: $CLIENT"
+echo "配置文件: $CONF"
+echo "-----------------------------------------------"
+
+# 终端二维码（UTF8）
+qrencode -t UTF8 < "$CONF"
+
+echo "-----------------------------------------------"
+
+# PNG（如果系统支持）
+if qrencode -o "$PNG" < "$CONF" 2>/dev/null; then
+    echo "✅ 二维码 PNG 已生成:"
+    echo "  $PNG"
+else
+    echo "⚠️ 当前 qrencode 未启用 PNG 输出（OpenWrt 常见）"
+    echo "仅支持终端二维码显示"
+fi

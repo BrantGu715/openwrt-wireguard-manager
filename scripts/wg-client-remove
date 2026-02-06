@@ -1,0 +1,43 @@
+#!/bin/sh
+
+NAME="$1"
+WG_IF="wg0"
+MAP_FILE="/etc/wireguard/clients/clients.map"
+CLIENT_DIR="/etc/wireguard/clients"
+
+[ -z "$NAME" ] && {
+    echo "用法: wg-client-remove <client_name>"
+    exit 1
+}
+
+# 1. 从 clients.map 中获取 public_key
+PUBKEY=$(grep "|$NAME|" "$MAP_FILE" | cut -d'|' -f1)
+
+if [ -z "$PUBKEY" ]; then
+    echo "❌ 未找到客户端: $NAME"
+    exit 1
+fi
+
+echo "🗑️  删除客户端: $NAME"
+echo "   公钥: $PUBKEY"
+
+# 2. 删除 network 中对应 peer
+uci show network | grep -q "$PUBKEY" && {
+    IDX=$(uci show network | grep "$PUBKEY" | cut -d. -f2 | cut -d= -f1)
+    uci delete network.$IDX
+    echo "✅ 已从 network 删除 peer"
+}
+
+# 3. 删除 clients.map 记录
+sed -i "\|$PUBKEY|d" "$MAP_FILE"
+echo "✅ 已从 clients.map 删除"
+
+# 4. 删除客户端配置文件
+rm -f "$CLIENT_DIR/$NAME.conf"
+rm -f "$CLIENT_DIR/$NAME.png"
+
+# 5. 应用配置
+uci commit network
+/etc/init.d/network reload
+
+echo "🎯 客户端 $NAME 已完全移除"

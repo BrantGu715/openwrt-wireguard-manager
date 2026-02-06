@@ -1,0 +1,42 @@
+#!/bin/sh
+
+echo "WireGuard 管理系统使用指南"
+echo "================================================="
+
+echo "
+一、服务管理
+---------------------------------
+wg-service-status      查看 WireGuard 服务与客户端状态
+wg-service-start       启动 WireGuard
+wg-service-stop        停止 WireGuard
+wg-service-restart     重启 WireGuard
+
+二、客户端管理
+---------------------------------
+wg-client-add <name>       添加客户端（生成配置 + 二维码）
+wg-client-remove <name>    删除客户端
+wg-client-disable <name>   禁用客户端
+wg-client-enable <name>    启用客户端
+wg-client-qrcode <name>    显示客户端二维码
+
+三、端口管理
+---------------------------------
+wg-port-change <port>      修改 WireGuard 监听端口
+wg-port-check              查看端口状态
+
+四、系统维护
+---------------------------------
+wg-system-setup        初始化 WireGuard 系统（首次）
+wg-system-install      安装 / 校验依赖
+wg-system-backup       备份 WireGuard 配置
+wg-system-monitor      基础健康检查
+wg-system-doctor       运行态一键诊断（推荐）
+wg-system-audit        配置一致性审计
+
+五、推荐排障流程
+---------------------------------
+1️⃣ wg-system-doctor
+2️⃣ wg-service-status
+3️⃣ wg-port-check
+4️⃣ wg-system-audit
+================================================="

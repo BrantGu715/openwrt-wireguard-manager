@@ -1,0 +1,75 @@
+#!/bin/sh
+
+WG_IF="wg0"
+WG_DIR="/etc/wireguard"
+MAP="$WG_DIR/clients/clients.map"
+
+echo "WireGuard 一键诊断 (wgm doctor)"
+echo "================================================="
+
+# 1. 接口
+if ip link show "$WG_IF" >/dev/null 2>&1; then
+    echo "接口 $WG_IF:            ✅ 存在"
+else
+    echo "接口 $WG_IF:            ❌ 不存在"
+fi
+
+# 2. 服务
+if wg show "$WG_IF" >/dev/null 2>&1; then
+    echo "WireGuard 服务:         ✅ 正常"
+else
+    echo "WireGuard 服务:         ❌ 未运行"
+fi
+
+# 3. 端口
+PORT=$(wg show "$WG_IF" listen-port 2>/dev/null)
+[ -n "$PORT" ] && \
+    echo "监听端口:              $PORT ✅" || \
+    echo "监听端口:              ❌ 未设置"
+
+# 4. IP Forward
+if sysctl net.ipv4.ip_forward 2>/dev/null | grep -q "= 1"; then
+    echo "IP Forward:            ✅ 开启"
+else
+    echo "IP Forward:            ❌ 关闭"
+fi
+
+# 5. 防火墙
+if uci show firewall | grep -q "name='wg'"; then
+    echo "防火墙 zone(wg):       ✅ 存在"
+else
+    echo "防火墙 zone(wg):       ❌ 缺失"
+fi
+
+echo "-------------------------------------------------"
+
+# 6. Peer 与 map 对齐检查
+if [ ! -f "$MAP" ]; then
+    echo "clients.map:           ❌ 不存在"
+    exit 0
+fi
+
+PEERS=$(wg show "$WG_IF" peers 2>/dev/null | wc -l)
+MAPS=$(grep -c '|' "$MAP")
+
+echo "Peer 数量:             $PEERS"
+echo "clients.map 条目:     $MAPS"
+
+if [ "$PEERS" -ne "$MAPS" ]; then
+    echo "⚠️  数量不一致，可能存在残留或未注册 peer"
+fi
+
+# 7. 未注册 peer
+UNKNOWN=0
+wg show "$WG_IF" peers 2>/dev/null | while read pub; do
+    grep -q "^$pub|" "$MAP" || UNKNOWN=1
+done
+
+[ "$UNKNOWN" -eq 1 ] && \
+    echo "⚠️  检测到未注册 peer（clients.map 中不存在）"
+
+echo "================================================="
+echo "建议排查顺序:"
+echo "1️⃣ wgm service status"
+echo "2️⃣ wgm port check"
+echo "3️⃣ 检查硬路由端口转发"

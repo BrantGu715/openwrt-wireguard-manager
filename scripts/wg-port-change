@@ -1,0 +1,43 @@
+#!/bin/sh
+set -e
+
+WG_IF="wg0"
+
+NEW_PORT="$1"
+
+[ -z "$NEW_PORT" ] && {
+    echo "用法: wg-port-change-internal <新端口>"
+    exit 1
+}
+
+echo "修改 WireGuard 内部监听端口"
+echo "-------------------------------------------------"
+
+OLD_PORT=$(wg show "$WG_IF" 2>/dev/null | awk '/listening port/ {print $3}')
+
+[ -z "$OLD_PORT" ] && {
+    echo "❌ WireGuard 未运行"
+    exit 1
+}
+
+echo "当前端口: $OLD_PORT"
+echo "新端口:   $NEW_PORT"
+echo ""
+
+read -p "确认修改? (y/N): " c
+[ "$c" != "y" ] && exit 0
+
+# 修改运行态
+wg set "$WG_IF" listen-port "$NEW_PORT"
+
+# 修改 UCI（持久化）
+uci set network.wg0.listen_port="$NEW_PORT"
+uci commit network
+
+/etc/init.d/network reload >/dev/null
+
+echo ""
+echo "✅ 内部监听端口已更新"
+echo ""
+echo "⚠️  请同步修改硬路由端口转发:"
+echo "    UDP <ExternalPort> → OpenWrt:$NEW_PORT"

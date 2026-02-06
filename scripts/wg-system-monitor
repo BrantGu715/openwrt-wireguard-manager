@@ -1,0 +1,42 @@
+
+#!/bin/sh
+
+WG_IF="wg0"
+
+echo "WireGuard 系统健康检查"
+echo "================================================="
+
+# 1. 接口
+if ip link show "$WG_IF" >/dev/null 2>&1; then
+    echo "接口: wg0            ✅ 存在"
+else
+    echo "接口: wg0            ❌ 不存在"
+    exit 1
+fi
+
+# 2. 监听端口
+PORT=$(wg show "$WG_IF" 2>/dev/null | awk '/listening port/ {print $3}')
+[ -n "$PORT" ] && \
+    echo "监听端口: $PORT        ✅" || \
+    echo "监听端口: 未知        ❌"
+
+# 3. IP 转发
+IPF=$(sysctl -n net.ipv4.ip_forward)
+[ "$IPF" = "1" ] && \
+    echo "IP Forward: 开启      ✅" || \
+    echo "IP Forward: 关闭      ❌"
+
+# 4. 防火墙 zone
+uci show firewall | grep -q "name='wg'" && \
+    echo "防火墙 Zone(wg):      ✅" || \
+    echo "防火墙 Zone(wg):      ❌"
+
+# 5. 客户端
+CLIENTS=$(wg show "$WG_IF" peers | wc -l)
+echo "已注册客户端: $CLIENTS"
+
+echo "================================================="
+echo "如客户端无法连接，请依次检查:"
+echo "1. wg-service-status"
+echo "2. wg-port-check"
+echo "3. 硬路由端口转发"

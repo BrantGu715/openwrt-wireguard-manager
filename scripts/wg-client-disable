@@ -1,0 +1,17 @@
+#!/bin/sh
+# WireGuard 禁用客户端
+# 仅临时禁用，不删除配置
+
+CLIENT="$1"
+[ -z "$CLIENT" ] && echo "用法: wg-client-disable <客户端名>" && exit 1
+
+MAP="/etc/wireguard/clients/clients.map"
+WG_IF="wg0"
+
+PUB=$(awk -F'|' -v n="$CLIENT" '$2==n{print $1}' "$MAP")
+[ -z "$PUB" ] && echo "❌ 未找到客户端" && exit 1
+
+wg set "$WG_IF" peer "$PUB" remove
+
+echo "✅ 客户端 $CLIENT 已临时禁用 (WireGuard peer 已移除)"
+

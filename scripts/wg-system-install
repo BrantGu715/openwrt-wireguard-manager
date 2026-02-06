@@ -1,0 +1,41 @@
+#!/bin/sh
+# WireGuard 系统安装与依赖检查脚本
+# 用于首次安装或检查环境
+
+set -e
+
+WG_DIR="/etc/wireguard"
+CLIENT_DIR="$WG_DIR/clients"
+
+echo "WireGuard 系统安装/检查"
+echo "================================================="
+
+# 1. 创建目录
+mkdir -p "$CLIENT_DIR"
+
+# 2. 检查 WireGuard 是否安装
+if ! command -v wg >/dev/null 2>&1; then
+    echo "❌ WireGuard 未安装，请安装内核模块和用户空间工具"
+    echo "OpenWrt 安装示例:"
+    echo "opkg update && opkg install wireguard-tools kmod-wireguard"
+else
+    echo "✅ WireGuard 工具已安装"
+fi
+
+# 3. 检查 qrencode（用于生成二维码）
+if ! command -v qrencode >/dev/null 2>&1; then
+    echo "⚠️ qrencode 未安装, 二维码功能不可用"
+    echo "安装: opkg install qrencode"
+else
+    echo "✅ qrencode 已安装"
+fi
+
+# 4. 检查 UCI 网络配置
+if ! grep -q "wireguard" /etc/config/network 2>/dev/null; then
+    echo "⚠️ 未检测到 WireGuard 网络配置，请使用 wg-system-setup 初始化"
+else
+    echo "✅ WireGuard 网络配置已存在"
+fi
+
+echo "================================================="
+echo "完成! 系统环境检查结束"

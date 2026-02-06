@@ -1,0 +1,15 @@
+#!/bin/sh
+echo "启动 WireGuard (OpenWrt netifd)..."
+
+# 启动 network（会自动拉起 wg0）
+/etc/init.d/network restart
+
+# 启动防火墙（确保规则生效）
+/etc/init.d/firewall restart
+
+echo ""
+echo "当前 WireGuard 状态："
+wg show || echo "wg 未运行"
+
+echo "✅ 完成"
+

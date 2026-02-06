@@ -1,0 +1,12 @@
+#!/bin/sh
+echo "重启 WireGuard (OpenWrt)..."
+
+# 重启网络（会重建 wg0）
+/etc/init.d/network restart
+
+# 重启防火墙
+/etc/init.d/firewall restart
+
+echo ""
+wg show || echo "⚠️ WireGuard 未运行"
+

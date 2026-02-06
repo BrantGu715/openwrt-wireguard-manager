@@ -1,0 +1,35 @@
+#!/bin/sh
+
+WG_IF="wg0"
+WG_DIR="/etc/wireguard"
+CLIENT_DIR="$WG_DIR/clients"
+
+echo "WireGuard 端口状态"
+echo "================================================="
+
+# 内部监听端口
+INTERNAL_PORT=$(wg show "$WG_IF" 2>/dev/null | awk '/listening port/ {print $3}')
+
+[ -z "$INTERNAL_PORT" ] && {
+    echo "❌ WireGuard 未运行"
+    exit 1
+}
+
+echo "内部监听端口 (OpenWrt): $INTERNAL_PORT"
+echo ""
+
+# 从任意一个客户端配置中推断外部端口
+CONF=$(ls "$CLIENT_DIR"/*.conf 2>/dev/null | head -n 1)
+if [ -n "$CONF" ]; then
+    EXTERNAL_PORT=$(grep ^Endpoint "$CONF" | awk -F: '{print $NF}')
+    DOMAIN=$(grep ^Endpoint "$CONF" | sed 's/Endpoint *= *//')
+    echo "外部访问端口 (客户端使用): $EXTERNAL_PORT"
+    echo "Endpoint 示例: $DOMAIN"
+else
+    echo "外部端口: 未发现客户端配置"
+fi
+
+echo ""
+echo "硬路由 NAT 规则应为:"
+echo "  UDP $EXTERNAL_PORT  →  OpenWrt:$INTERNAL_PORT"
+echo "================================================="

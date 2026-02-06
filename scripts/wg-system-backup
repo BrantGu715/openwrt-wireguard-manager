@@ -1,0 +1,12 @@
+#!/bin/sh
+
+DST="/root/wg-backup-$(date +%Y%m%d-%H%M%S).tar.gz"
+
+tar czf "$DST" \
+    /etc/wireguard \
+    /etc/config/network \
+    /etc/config/firewall \
+    /usr/local/bin/wg-* 2>/dev/null
+
+echo "✅ WireGuard 配置已备份:"
+echo "  $DST"

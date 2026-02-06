@@ -1,0 +1,61 @@
+#!/bin/sh
+# WireGuard 服务状态
+# 输出接口信息 + peer 在线状态
+
+WG_IF="wg0"
+MAP="/etc/wireguard/clients/clients.map"
+
+echo "WireGuard 服务状态"
+echo "================================================="
+
+# 接口存在与否
+if ip link show "$WG_IF" >/dev/null 2>&1; then
+    echo "接口:        $WG_IF      ✅"
+else
+    echo "接口:        $WG_IF      ❌ MISSING"
+fi
+
+# 监听端口
+PORT=$(wg show "$WG_IF" listen-port 2>/dev/null || echo "-")
+echo "监听端口:    $PORT"
+
+# 已注册 Peer 数量
+PEERS=$(wg show "$WG_IF" dump 2>/dev/null | tail -n +2 | wc -l)
+echo "Peer 数量:   $PEERS"
+echo "-------------------------------------------------"
+
+# 客户端状态
+if [ ! -f "$MAP" ]; then
+    echo "⚠️ clients.map 文件不存在: $MAP"
+    exit 0
+fi
+
+awk -F'|' '{print $2 "|" $1 "|" $3}' "$MAP" | while IFS='|' read NAME PUB IP; do
+    # 是否在线
+    LINE=$(wg show "$WG_IF" dump 2>/dev/null | grep -w "$PUB")
+    if [ -z "$LINE" ]; then
+        STATE="❌ DISABLED/OFFLINE"
+        LAST="从未连接"
+        RX=0
+        TX=0
+    else
+        HS=$(echo "$LINE" | awk '{print $5}')
+        RX=$(echo "$LINE" | awk '{print $6}')
+        TX=$(echo "$LINE" | awk '{print $7}')
+        if [ "$HS" -gt 0 ]; then
+            AGE=$(( $(date +%s) - HS ))
+            STATE="✅ ONLINE"
+            LAST="${AGE}s 前"
+        else
+            STATE="❌ OFFLINE"
+            LAST="从未连接"
+        fi
+    fi
+
+    echo "客户端: $NAME"
+    echo "  状态: $STATE"
+    echo "  IP:   $IP"
+    echo "  最近握手: $LAST"
+    echo "  流量: ↓ $RX  ↑ $TX"
+    echo "-------------------------------------------------"
+done
